@@ -218,6 +218,13 @@ enum {  //cmd_modes
 static const char *cmd_mode_indicator[] =
 	{"COMMAND", "INSERT", "REPLACE", "?!?" };
 
+static char *new_strchrnul(const char *s, int c) {
+	char *ptr = strchr(s, c);
+	if (!ptr)
+		ptr = s + strlen(s);
+	return ptr;
+}
+
 /* vi.c expects chars to be unsigned. */
 /* busybox build system provides that, but it's better */
 /* to audit and fix the source */
@@ -672,7 +679,7 @@ static ssize_t
 	size_t cursor = 0;
 	while (cursor < bufSize) {
 		if (!awaitInput(ticsPerChar+9))
-			return -ETIME;
+			return 0;
 		int r = safe_read(STDIN_FILENO, buf + cursor, bufSize - cursor);
 		if (r <= 0)
 			return r < 0 ? r : -EIO;
@@ -1026,7 +1033,7 @@ static char *get_one_address(char *p, int *addr)	// get colon addr, if present
 #endif
 #if ENABLE_FEATURE_VI_SEARCH
 	else if (*p == '/') {	// a search pattern
-		q = strchrnul(++p, '/');
+		q = new_strchrnul(++p, '/');
 		pat = xstrndup(p, q - p); // save copy of pattern
 		p = q;
 		if (*p == '/')
